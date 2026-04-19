@@ -1,0 +1,833 @@
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>TERRA — Полноценное приложение для проектирования сада</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #060e0a;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+        /* Основной контейнер */
+        .app {
+            max-width: 700px;
+            width: 100%;
+            background: #0d1610;
+            border-radius: 28px;
+            border: 1px solid rgba(201,168,76,0.2);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        /* Верхняя панель */
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            background: #0a110c;
+            border-bottom: 1px solid rgba(201,168,76,0.15);
+        }
+        .logo {
+            font-weight: 600;
+            letter-spacing: 2px;
+            font-size: 14px;
+            color: #e8e0d0;
+        }
+        .logo span {
+            color: #c9a84c;
+        }
+        .scene-name {
+            font-size: 12px;
+            color: #8a8070;
+            font-style: italic;
+            margin-left: auto;
+        }
+        .progress {
+            flex: 1;
+            height: 2px;
+            background: #1a2618;
+            border-radius: 2px;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #c9a84c;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: #2a3a28;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dot.active {
+            background: #c9a84c;
+            transform: scale(1.3);
+        }
+        .dot.done {
+            background: #b8942e;
+        }
+        /* Аудио панель */
+        .audio-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 18px;
+            background: rgba(201,168,76,0.05);
+            border-bottom: 1px solid rgba(201,168,76,0.1);
+        }
+        .audio-btn {
+            background: none;
+            border: 1px solid rgba(201,168,76,0.3);
+            border-radius: 40px;
+            padding: 4px 12px;
+            color: #aaa;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .audio-btn.on {
+            background: rgba(201,168,76,0.15);
+            border-color: #c9a84c;
+            color: #c9a84c;
+        }
+        .wave {
+            display: flex;
+            gap: 2px;
+            height: 14px;
+            align-items: center;
+        }
+        .wave span {
+            width: 2px;
+            background: #c9a84c;
+            height: 4px;
+            transition: height 0.1s;
+        }
+        .wave.playing span {
+            animation: waveAnim 0.6s infinite alternate;
+        }
+        @keyframes waveAnim {
+            0% { height: 4px; }
+            100% { height: 12px; }
+        }
+        .volume {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        input[type="range"] {
+            width: 70px;
+            accent-color: #c9a84c;
+        }
+        /* Сцены */
+        .scene {
+            display: none;
+            min-height: 360px;
+            background: #060e0a;
+            padding: 20px;
+            animation: fade 0.3s ease;
+        }
+        .scene.active {
+            display: block;
+        }
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Стили элементов сцен */
+        .upload-area {
+            border: 2px dashed rgba(201,168,76,0.3);
+            border-radius: 20px;
+            background: rgba(201,168,76,0.03);
+            padding: 30px 20px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .progress-bar {
+            height: 4px;
+            background: #1a2618;
+            border-radius: 2px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+        .progress-fill-s1 {
+            width: 0%;
+            height: 100%;
+            background: #c9a84c;
+            transition: width 0.2s;
+        }
+        .cards {
+            display: flex;
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .card {
+            background: #0d1610;
+            border: 1px solid rgba(201,168,76,0.2);
+            border-radius: 12px;
+            padding: 10px;
+            flex: 1;
+            text-align: center;
+        }
+        .editor-layout {
+            display: flex;
+            gap: 16px;
+            height: 280px;
+        }
+        .catalog {
+            width: 120px;
+            background: #0a110c;
+            border-radius: 16px;
+            padding: 8px;
+            overflow-y: auto;
+        }
+        .catalog-item {
+            padding: 8px;
+            margin-bottom: 6px;
+            background: #141e12;
+            border-radius: 10px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        .plot {
+            flex: 1;
+            background: #0a110c;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            background-image: radial-gradient(circle, rgba(201,168,76,0.08) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .plant-icon {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background: #141e12;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 1px solid rgba(201,168,76,0.3);
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .plant-label {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            white-space: nowrap;
+            color: #8a8070;
+        }
+        .property-panel {
+            background: #0d1610;
+            border-radius: 16px;
+            padding: 12px;
+            width: 200px;
+        }
+        .conflict-badge {
+            background: rgba(192,96,80,0.2);
+            border-left: 3px solid #c06050;
+            padding: 8px;
+            font-size: 11px;
+            margin-top: 12px;
+        }
+        .estimate-grid {
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .estimate-card {
+            background: #0d1610;
+            border-radius: 14px;
+            padding: 12px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        th, td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(201,168,76,0.1);
+            text-align: left;
+        }
+        .export-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .export-item {
+            background: #0d1610;
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid rgba(201,168,76,0.2);
+        }
+        /* Управление */
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            background: #0a110c;
+            border-top: 1px solid rgba(201,168,76,0.1);
+        }
+        button {
+            background: none;
+            border: 1px solid rgba(201,168,76,0.3);
+            border-radius: 30px;
+            padding: 6px 16px;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        button.primary {
+            background: rgba(201,168,76,0.15);
+            border-color: #c9a84c;
+            color: #c9a84c;
+        }
+        button:hover {
+            background: rgba(201,168,76,0.1);
+        }
+        .step-indicator {
+            font-size: 12px;
+            color: #8a8070;
+        }
+        .caption {
+            background: #0a110c;
+            padding: 12px 18px;
+            border-top: 1px solid rgba(201,168,76,0.1);
+        }
+        .cap-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #e8e0d0;
+        }
+        .cap-desc {
+            font-size: 11px;
+            color: #8a8070;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <!-- Верхняя панель -->
+    <div class="topbar">
+        <div class="logo">TERRA<span>✦</span></div>
+        <div class="progress"><div class="progress-fill" id="globalProgress"></div></div>
+        <div class="dots" id="navDots"></div>
+        <div class="scene-name" id="sceneLabel">Приветствие</div>
+    </div>
+
+    <!-- Аудио панель -->
+    <div class="audio-bar">
+        <button class="audio-btn" id="audioToggleBtn">🔇 Звук выкл.</button>
+        <div class="wave" id="waveViz"><span></span><span></span><span></span><span></span></div>
+        <div class="volume">
+            <span>🔊</span>
+            <input type="range" id="volumeSlider" min="0" max="100" value="60">
+        </div>
+    </div>
+
+    <!-- Сцены -->
+    <div id="scenesContainer">
+        <!-- Сцена 0: Приветствие -->
+        <div class="scene active" id="scene0">
+            <div style="text-align: center; padding: 20px 0;">
+                <div style="font-size: 48px; margin-bottom: 12px;">🌿</div>
+                <h2 style="color: #c9a84c; margin-bottom: 8px;">TERRA</h2>
+                <p style="color: #aaa; margin-bottom: 24px;">Проектируйте сад с помощью ИИ</p>
+                <button id="startBtn" class="primary" style="padding: 10px 24px;">🚀 Запуск</button>
+            </div>
+        </div>
+
+        <!-- Сцена 1: Загрузка фото + AI -->
+        <div class="scene" id="scene1">
+            <div class="upload-area" id="uploadArea">
+                <div>📸</div>
+                <div style="margin: 8px 0;">Перетащите фото участка</div>
+                <small style="color: #666;">JPG, PNG</small>
+            </div>
+            <div class="cards">
+                <div class="card">Стиль: Природный</div>
+                <div class="card">Бюджет: 300 000 ₽</div>
+                <div class="card">Климат: Зона 4</div>
+            </div>
+            <div id="aiProgress" style="display: none;">
+                <div class="progress-bar"><div id="aiBar" class="progress-fill-s1"></div></div>
+                <div id="aiStatus" style="font-size: 12px; color: #aaa;">Анализ...</div>
+            </div>
+            <div id="aiVariants" style="display: none; margin-top: 16px;">
+                <div style="font-size: 11px; margin-bottom: 8px;">⭐ ВАРИАНТЫ ДИЗАЙНА</div>
+                <div class="cards">
+                    <div class="card" style="cursor: pointer;">🌿 Природный</div>
+                    <div class="card" style="cursor: pointer;">🌸 Цветущий</div>
+                    <div class="card" style="cursor: pointer;">🪨 Минимализм</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Сцена 2: Редактор -->
+        <div class="scene" id="scene2">
+            <div class="editor-layout">
+                <div class="catalog" id="catalog">
+                    <div class="catalog-item" data-plant="🌳 Берёза" data-price="2800">🌳 Берёза</div>
+                    <div class="catalog-item" data-plant="🌲 Ель" data-price="3200">🌲 Ель</div>
+                    <div class="catalog-item" data-plant="🌸 Сирень" data-price="650">🌸 Сирень</div>
+                    <div class="catalog-item" data-plant="🌹 Роза" data-price="850">🌹 Роза</div>
+                    <div class="catalog-item" data-plant="⛲ Беседка" data-price="38000">⛲ Беседка</div>
+                </div>
+                <div class="plot" id="plotArea"></div>
+            </div>
+        </div>
+
+        <!-- Сцена 3: Свойства и конфликт -->
+        <div class="scene" id="scene3">
+            <div style="display: flex; gap: 16px;">
+                <div style="flex:1; position: relative; min-height: 200px; background: #0a110c; border-radius: 16px;" id="propertyPlot">
+                    <div class="plant-icon" style="left: 40px; top: 50px;">🌳<span class="plant-label">Берёза</span></div>
+                    <div class="plant-icon" style="left: 100px; top: 80px;">🌿<span class="plant-label">Папоротник</span></div>
+                    <div class="plant-icon" style="left: 160px; top: 40px;">🌹<span class="plant-label">Роза</span></div>
+                </div>
+                <div class="property-panel" id="propertyPanel">
+                    <div><strong>Берёза повислая</strong></div>
+                    <div style="font-size: 11px; color: #aaa;">Betula pendula</div>
+                    <div style="margin-top: 12px;">Высота: до 20 м</div>
+                    <div>Цена: 2 800 ₽</div>
+                    <div id="compatMsg" style="margin-top: 12px; color: #6b8f6a;">✓ Совместима</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Сцена 4: Смета -->
+        <div class="scene" id="scene4">
+            <div class="estimate-grid">
+                <div class="estimate-card">💰 Итого: <span id="totalSum">0</span> ₽</div>
+                <div class="estimate-card">📦 Позиций: <span id="itemsCount">0</span></div>
+                <div class="estimate-card">📐 Площадь: 8 сот.</div>
+            </div>
+            <table id="estimateTable">
+                <thead><tr><th>Наименование</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Сцена 5: Экспорт -->
+        <div class="scene" id="scene5">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h3 style="color: #c9a84c;">Проект готов!</h3>
+                <p style="font-size: 12px;">9 объектов · 8 соток</p>
+            </div>
+            <div class="export-cards">
+                <div class="export-item" data-type="pdf">📄 PDF-отчёт</div>
+                <div class="export-item" data-type="excel">📊 Excel-смета</div>
+                <div class="export-item" data-type="link">🔗 Ссылка</div>
+                <div class="export-item" data-type="png">🖼️ PNG план</div>
+            </div>
+            <button id="resetAppBtn" style="width: 100%; margin-top: 12px;">✨ Начать новый проект</button>
+        </div>
+    </div>
+
+    <!-- Панель управления -->
+    <div class="controls">
+        <button id="prevBtn">◀ Назад</button>
+        <div class="step-indicator" id="stepIndicator">1 / 6</div>
+        <button id="nextBtn" class="primary">Далее ▶</button>
+    </div>
+
+    <!-- Подпись -->
+    <div class="caption">
+        <div class="cap-title" id="capTitle">TERRA</div>
+        <div class="cap-desc" id="capDesc">Нажмите «Запуск» или «Далее»</div>
+    </div>
+</div>
+
+<script>
+    // ---------- ПОЛНОСТЬЮ РАБОЧЕЕ ПРИЛОЖЕНИЕ ----------
+    (function(){
+        // --- Данные сцен и состояние ---
+        const scenesData = [
+            { name: "Приветствие", title: "Добро пожаловать", desc: "Нажмите «Запуск» или «Далее», чтобы начать проектирование." },
+            { name: "Загрузка", title: "Загрузите фото участка", desc: "ИИ проанализирует участок и предложит стили." },
+            { name: "Редактор", title: "Перетащите растения", desc: "Выберите растения из каталога и разместите на плане." },
+            { name: "Свойства", title: "Свойства растений", desc: "Нажмите на растение, чтобы увидеть детали и конфликты." },
+            { name: "Смета", title: "Автоматическая смета", desc: "Цены и количество обновляются автоматически." },
+            { name: "Экспорт", title: "Готово", desc: "Скачайте проект в любом формате." }
+        ];
+        let currentScene = 0;
+        let totalScenes = scenesData.length;
+        let autoTimer = null;
+        let audioEnabled = false;
+        let audioCtx = null;
+        let masterGain = null;
+        let ambientInterval = null;
+
+        // Данные для сметы (растения, добавленные пользователем)
+        let plantsList = [
+            { name: "Берёза", icon: "🌳", qty: 1, price: 2800 },
+            { name: "Ель", icon: "🌲", qty: 1, price: 3200 }
+        ];
+
+        // Элементы DOM
+        const scenes = [document.getElementById('scene0'), document.getElementById('scene1'), document.getElementById('scene2'), document.getElementById('scene3'), document.getElementById('scene4'), document.getElementById('scene5')];
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const globalProgress = document.getElementById('globalProgress');
+        const navDots = document.getElementById('navDots');
+        const sceneLabel = document.getElementById('sceneLabel');
+        const capTitle = document.getElementById('capTitle');
+        const capDesc = document.getElementById('capDesc');
+        const audioToggleBtn = document.getElementById('audioToggleBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const waveViz = document.getElementById('waveViz');
+
+        // --- Функции переключения сцен ---
+        function updateUI() {
+            // Скрыть все сцены
+            scenes.forEach((scene, idx) => {
+                if (scene) {
+                    if (idx === currentScene) scene.classList.add('active');
+                    else scene.classList.remove('active');
+                }
+            });
+            // Обновить текстовые элементы
+            sceneLabel.innerText = scenesData[currentScene].name;
+            capTitle.innerText = scenesData[currentScene].title;
+            capDesc.innerText = scenesData[currentScene].desc;
+            stepIndicator.innerText = (currentScene+1) + ' / ' + totalScenes;
+            globalProgress.style.width = ((currentScene / (totalScenes-1)) * 100) + '%';
+            // Обновить точки навигации
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, i) => {
+                dot.classList.remove('active', 'done');
+                if (i < currentScene) dot.classList.add('done');
+                else if (i === currentScene) dot.classList.add('active');
+            });
+            // Сброс таймера авто-переключения
+            if (autoTimer) clearTimeout(autoTimer);
+            autoTimer = setTimeout(() => { next(); }, 7000);
+        }
+
+        function goToScene(index) {
+            if (index < 0) index = 0;
+            if (index >= totalScenes) index = totalScenes-1;
+            if (index === currentScene) return;
+            currentScene = index;
+            updateUI();
+            // Запустить анимации для конкретной сцены
+            if (currentScene === 1) simulateAI();
+            if (currentScene === 2) renderPlot();
+            if (currentScene === 3) updatePropertyPanel('🌳 Берёза');
+            if (currentScene === 4) updateEstimate();
+            playSound('click');
+        }
+
+        function next() { goToScene(currentScene + 1); }
+        function prev() { goToScene(currentScene - 1); }
+
+        // --- Симуляция AI для сцены 1 ---
+        function simulateAI() {
+            const aiProgressDiv = document.getElementById('aiProgress');
+            const aiVariantsDiv = document.getElementById('aiVariants');
+            const aiBar = document.getElementById('aiBar');
+            const aiStatus = document.getElementById('aiStatus');
+            if (!aiProgressDiv) return;
+            aiProgressDiv.style.display = 'block';
+            aiVariantsDiv.style.display = 'none';
+            let width = 0;
+            const interval = setInterval(() => {
+                width += Math.random() * 15 + 5;
+                if (width >= 100) {
+                    width = 100;
+                    clearInterval(interval);
+                    aiStatus.innerText = 'Готово!';
+                    setTimeout(() => {
+                        aiVariantsDiv.style.display = 'block';
+                        playSound('success');
+                    }, 400);
+                }
+                aiBar.style.width = width + '%';
+                if (width < 30) aiStatus.innerText = 'Анализ фото...';
+                else if (width < 70) aiStatus.innerText = 'Определение климата...';
+                else aiStatus.innerText = 'Генерация дизайна...';
+            }, 300);
+        }
+
+        // --- Редактор: отрисовка участка и добавление растений ---
+        let plantElements = [];
+        function renderPlot() {
+            const plot = document.getElementById('plotArea');
+            if (!plot) return;
+            plot.innerHTML = '';
+            plantElements.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'plant-icon';
+                div.style.left = p.x + 'px';
+                div.style.top = p.y + 'px';
+                div.innerHTML = p.icon + '<span class="plant-label">' + p.name + '</span>';
+                div.setAttribute('data-name', p.name);
+                div.setAttribute('data-price', p.price);
+                div.onclick = () => { selectPlantForProps(p.name, p.price); };
+                plot.appendChild(div);
+            });
+            // Добавить обработчик перетаскивания из каталога
+            const catalogItems = document.querySelectorAll('.catalog-item');
+            catalogItems.forEach(item => {
+                item.setAttribute('draggable', 'true');
+                item.ondragstart = (e) => {
+                    e.dataTransfer.setData('text/plain', JSON.stringify({
+                        name: item.innerText.split(' ')[1] || item.innerText,
+                        icon: item.innerText.charAt(0),
+                        price: parseInt(item.getAttribute('data-price') || '0')
+                    }));
+                };
+            });
+            plot.ondragover = (e) => e.preventDefault();
+            plot.ondrop = (e) => {
+                e.preventDefault();
+                const rect = plot.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                if (data && data.name) {
+                    plantElements.push({ name: data.name, icon: data.icon, price: data.price, x: x, y: y });
+                    renderPlot();
+                    updateEstimate();
+                    playSound('plant');
+                }
+            };
+        }
+
+        function selectPlantForProps(name, price) {
+            // Переключиться на сцену свойств и показать информацию
+            if (currentScene !== 3) goToScene(3);
+            updatePropertyPanel(name);
+        }
+
+        function updatePropertyPanel(plantName) {
+            const panel = document.getElementById('propertyPanel');
+            if (!panel) return;
+            if (plantName.includes('Берёза')) {
+                panel.innerHTML = `<div><strong>Берёза повислая</strong></div>
+                    <div style="font-size: 11px; color: #aaa;">Betula pendula</div>
+                    <div>Высота: до 20 м</div>
+                    <div>Цена: 2 800 ₽</div>
+                    <div id="compatMsg" style="margin-top: 12px; color: #6b8f6a;">✓ Совместима</div>`;
+                // Проверка конфликта с папоротником
+                if (document.querySelector('#propertyPlot .plant-icon span') && document.querySelector('#propertyPlot .plant-icon span').innerText === 'Папоротник') {
+                    document.getElementById('compatMsg').innerHTML = '⚠ Конфликт: не сажать рядом с папоротником!';
+                    document.getElementById('compatMsg').style.color = '#c06050';
+                    playSound('warning');
+                }
+            } else {
+                panel.innerHTML = `<div><strong>${plantName}</strong></div><div>Цена: ${price} ₽</div><div>Нет конфликтов</div>`;
+            }
+        }
+
+        // --- Смета ---
+        function updateEstimate() {
+            const tbody = document.querySelector('#estimateTable tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            let total = 0;
+            let items = 0;
+            plantsList.forEach(p => {
+                total += p.price * p.qty;
+                items += p.qty;
+                const row = `<tr><td>${p.icon} ${p.name}</td><td>${p.qty}</td><td>${p.price} ₽</td><td>${p.price * p.qty} ₽</td></tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+            // Добавить растения из редактора
+            plantElements.forEach(p => {
+                const existing = plantsList.find(pl => pl.name === p.name);
+                if (!existing) {
+                    plantsList.push({ name: p.name, icon: p.icon, qty: 1, price: p.price });
+                } else {
+                    existing.qty++;
+                }
+            });
+            // Пересчёт
+            total = 0; items = 0;
+            tbody.innerHTML = '';
+            plantsList.forEach(p => {
+                total += p.price * p.qty;
+                items += p.qty;
+                const row = `<tr><td>${p.icon} ${p.name}</td><td>${p.qty}</td><td>${p.price} ₽</td><td>${p.price * p.qty} ₽</td></tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+            document.getElementById('totalSum').innerText = total.toLocaleString();
+            document.getElementById('itemsCount').innerText = items;
+        }
+
+        // --- Звуковая система ---
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = volumeSlider.value / 100;
+            masterGain.connect(audioCtx.destination);
+        }
+        function playSound(type) {
+            if (!audioEnabled || !audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(masterGain);
+            if (type === 'click') {
+                osc.frequency.value = 800;
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now+0.1);
+                osc.start(now);
+                osc.stop(now+0.1);
+            } else if (type === 'plant') {
+                osc.frequency.value = 523;
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now+0.3);
+                osc.start(now);
+                osc.stop(now+0.3);
+            } else if (type === 'success') {
+                [523, 659, 784].forEach((f, i) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.frequency.value = f;
+                    g.gain.setValueAtTime(0.1, now + i*0.1);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + i*0.1 + 0.3);
+                    o.connect(g);
+                    g.connect(masterGain);
+                    o.start(now + i*0.1);
+                    o.stop(now + i*0.1 + 0.3);
+                });
+            } else if (type === 'warning') {
+                osc.frequency.value = 220;
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now+0.5);
+                osc.start(now);
+                osc.stop(now+0.5);
+            }
+        }
+        function startAmbient() {
+            if (ambientInterval) clearInterval(ambientInterval);
+            ambientInterval = setInterval(() => {
+                if (audioEnabled && audioCtx) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = 120 + Math.random() * 20;
+                    gain.gain.value = 0.02;
+                    osc.connect(gain);
+                    gain.connect(masterGain);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.8);
+                }
+            }, 3000);
+        }
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            if (audioEnabled) {
+                initAudio();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                masterGain.gain.value = volumeSlider.value / 100;
+                audioToggleBtn.innerHTML = '🔊 Звук вкл.';
+                audioToggleBtn.classList.add('on');
+                waveViz.classList.add('playing');
+                startAmbient();
+                playSound('success');
+            } else {
+                audioToggleBtn.innerHTML = '🔇 Звук выкл.';
+                audioToggleBtn.classList.remove('on');
+                waveViz.classList.remove('playing');
+                if (ambientInterval) clearInterval(ambientInterval);
+                ambientInterval = null;
+            }
+        }
+        function setVolume(val) {
+            if (masterGain) masterGain.gain.value = val / 100;
+        }
+
+        // --- Построение точек навигации ---
+        function buildDots() {
+            navDots.innerHTML = '';
+            for (let i = 0; i < totalScenes; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                if (i === currentScene) dot.classList.add('active');
+                dot.addEventListener('click', () => goToScene(i));
+                navDots.appendChild(dot);
+            }
+        }
+
+        // --- Инициализация ---
+        function init() {
+            buildDots();
+            updateUI();
+            // Кнопки
+            prevBtn.addEventListener('click', prev);
+            nextBtn.addEventListener('click', next);
+            audioToggleBtn.addEventListener('click', toggleAudio);
+            volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
+            document.getElementById('startBtn')?.addEventListener('click', () => {
+                goToScene(1);
+                if (!audioEnabled) toggleAudio();
+            });
+            document.getElementById('resetAppBtn')?.addEventListener('click', () => {
+                plantsList = [{ name: "Берёза", icon: "🌳", qty: 1, price: 2800 }, { name: "Ель", icon: "🌲", qty: 1, price: 3200 }];
+                plantElements = [];
+                renderPlot();
+                updateEstimate();
+                goToScene(0);
+            });
+            // Экспорт
+            document.querySelectorAll('.export-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    alert(`Экспорт в ${el.innerText} (демо-режим)`);
+                    playSound('success');
+                });
+            });
+            // Первоначальная отрисовка
+            renderPlot();
+            updateEstimate();
+            // Инициализация аудио по первому клику на страницу
+            document.body.addEventListener('click', () => { if (!audioCtx && audioEnabled) initAudio(); }, { once: true });
+        }
+        init();
+    })();
+</script>
+</body>
+</html>
