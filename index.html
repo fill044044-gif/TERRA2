@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERRA — Рабочее приложение</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0f0c;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .app {
+            max-width: 700px;
+            width: 100%;
+            background: #0d1610;
+            border-radius: 32px;
+            border: 1px solid rgba(201,168,76,0.2);
+            overflow: hidden;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.5);
+        }
+        /* Шапка */
+        .header {
+            background: #0a110c;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(201,168,76,0.15);
+        }
+        .logo {
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #e8e0d0;
+        }
+        .logo span {
+            color: #c9a84c;
+        }
+        .scene-name {
+            font-size: 12px;
+            color: #8a8070;
+        }
+        /* Контейнер сцен */
+        .scenes-container {
+            position: relative;
+            min-height: 400px;
+            background: #060e0a;
+        }
+        .scene {
+            display: none;
+            padding: 24px;
+            animation: fade 0.3s ease;
+        }
+        .scene.active {
+            display: block;
+        }
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Карточки */
+        .card {
+            background: #0d1610;
+            border: 1px solid rgba(201,168,76,0.2);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        button {
+            background: rgba(201,168,76,0.1);
+            border: 1px solid rgba(201,168,76,0.4);
+            border-radius: 40px;
+            padding: 8px 20px;
+            color: #e8e0d0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button.primary {
+            background: rgba(201,168,76,0.2);
+            border-color: #c9a84c;
+            color: #c9a84c;
+        }
+        button:hover {
+            background: rgba(201,168,76,0.3);
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: #0a110c;
+            border-top: 1px solid rgba(201,168,76,0.1);
+        }
+        .step {
+            font-size: 12px;
+            color: #8a8070;
+        }
+        .caption {
+            background: #0a110c;
+            padding: 12px 20px;
+            border-top: 1px solid rgba(201,168,76,0.1);
+            font-size: 12px;
+            color: #aaa;
+        }
+        .plant-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .plant-item {
+            background: #141e12;
+            border-radius: 40px;
+            padding: 6px 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .plot {
+            background: #0a110c;
+            border-radius: 20px;
+            height: 200px;
+            margin: 16px 0;
+            position: relative;
+            background-image: radial-gradient(circle, rgba(201,168,76,0.08) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .plant-on-plot {
+            position: absolute;
+            background: #141e12;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            border: 1px solid rgba(201,168,76,0.4);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(201,168,76,0.1);
+            text-align: left;
+        }
+        .total {
+            font-size: 18px;
+            color: #c9a84c;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <div class="logo">TERRA <span>✦</span></div>
+        <div class="scene-name" id="sceneName">Приветствие</div>
+    </div>
+
+    <div class="scenes-container" id="scenesContainer">
+        <!-- Сцена 0: Приветствие -->
+        <div class="scene active" id="scene0">
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 12px;">🌿</div>
+                <h2 style="color: #c9a84c; margin-bottom: 8px;">TERRA</h2>
+                <p style="margin-bottom: 24px;">Проектируйте сад с помощью ИИ</p>
+                <button class="primary" id="startBtn">▶ Запуск</button>
+            </div>
+        </div>
+
+        <!-- Сцена 1: Загрузка + AI -->
+        <div class="scene" id="scene1">
+            <div class="card">
+                <div style="text-align: center;">📸 Загрузите фото участка</div>
+                <div class="progress-bar" style="height: 4px; background: #1a2618; margin: 16px 0; border-radius: 2px; overflow: hidden;">
+                    <div id="aiProgressBar" style="width: 0%; height: 100%; background: #c9a84c;"></div>
+                </div>
+                <div id="aiText" style="font-size: 12px; color: #aaa;">Нажмите "Анализ"</div>
+                <button id="analyzeBtn" style="margin-top: 12px;">🔍 Анализировать</button>
+            </div>
+            <div id="variants" style="display: none;" class="plant-list">
+                <div class="plant-item">🌿 Природный</div>
+                <div class="plant-item">🌸 Цветущий</div>
+                <div class="plant-item">🪨 Минимализм</div>
+            </div>
+        </div>
+
+        <!-- Сцена 2: Редактор -->
+        <div class="scene" id="scene2">
+            <div class="card">
+                <div>🌱 Каталог растений (перетащите на участок)</div>
+                <div class="plant-list" id="catalog">
+                    <div class="plant-item" draggable="true" data-name="Берёза" data-icon="🌳" data-price="2800">🌳 Берёза</div>
+                    <div class="plant-item" draggable="true" data-name="Ель" data-icon="🌲" data-price="3200">🌲 Ель</div>
+                    <div class="plant-item" draggable="true" data-name="Сирень" data-icon="🌸" data-price="650">🌸 Сирень</div>
+                    <div class="plant-item" draggable="true" data-name="Роза" data-icon="🌹" data-price="850">🌹 Роза</div>
+                    <div class="plant-item" draggable="true" data-name="Беседка" data-icon="⛲" data-price="38000">⛲ Беседка</div>
+                </div>
+                <div class="plot" id="plot"></div>
+                <div style="font-size: 11px; color: #666;">✨ Перетащите растение на серую область</div>
+            </div>
+        </div>
+
+        <!-- Сцена 3: Свойства и конфликт -->
+        <div class="scene" id="scene3">
+            <div class="card" id="propertyCard">
+                <div><strong>🌳 Берёза</strong></div>
+                <div>Высота: до 20 м</div>
+                <div>Цена: 2 800 ₽</div>
+                <div id="conflictMsg" style="color: #6b8f6a; margin-top: 8px;">✓ Совместима</div>
+            </div>
+            <div class="plot" id="propertyPlot" style="height: 150px;">
+                <div class="plant-on-plot" style="left: 30%; top: 50%;">🌳<span style="position: absolute; bottom: -20px; font-size: 10px;">Берёза</span></div>
+                <div class="plant-on-plot" style="left: 70%; top: 50%;">🌿<span style="position: absolute; bottom: -20px; font-size: 10px;">Папоротник</span></div>
+            </div>
+            <button id="checkConflictBtn">⚠ Проверить конфликт</button>
+        </div>
+
+        <!-- Сцена 4: Смета -->
+        <div class="scene" id="scene4">
+            <div class="card">
+                <div>💰 Смета</div>
+                <table id="estimateTable">
+                    <thead><tr><th>Наименование</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                <div class="total" id="totalAmount">Итого: 0 ₽</div>
+            </div>
+        </div>
+
+        <!-- Сцена 5: Экспорт -->
+        <div class="scene" id="scene5">
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 32px;">✅</div>
+                <h3>Проект готов!</h3>
+                <div class="plant-list" style="justify-content: center; margin-top: 16px;">
+                    <button id="exportPdf">📄 PDF</button>
+                    <button id="exportExcel">📊 Excel</button>
+                    <button id="exportLink">🔗 Ссылка</button>
+                    <button id="exportPng">🖼️ PNG</button>
+                </div>
+                <button id="resetBtn" style="margin-top: 20px;">🔄 Новый проект</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="prevBtn">◀ Назад</button>
+        <div class="step" id="stepIndicator">1 / 6</div>
+        <button id="nextBtn" class="primary">Далее ▶</button>
+    </div>
+    <div class="caption" id="caption">
+        Нажмите «Далее» или выберите сцену
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ---------- СОСТОЯНИЕ ----------
+        let currentScene = 0;
+        const totalScenes = 6;
+        let plants = []; // массив { name, icon, price, x, y }
+        let autoTimer = null;
+
+        // DOM элементы
+        const scenes = [
+            document.getElementById('scene0'),
+            document.getElementById('scene1'),
+            document.getElementById('scene2'),
+            document.getElementById('scene3'),
+            document.getElementById('scene4'),
+            document.getElementById('scene5')
+        ];
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const sceneNameSpan = document.getElementById('sceneName');
+        const captionDiv = document.getElementById('caption');
+
+        const sceneNames = [
+            "Приветствие", "Загрузка + AI", "Редактор", "Свойства", "Смета", "Экспорт"
+        ];
+        const captions = [
+            "Нажмите «Запуск» или «Далее», чтобы начать.",
+            "Загрузите фото или нажмите «Анализировать» для демо.",
+            "Перетащите растения из каталога на серое поле.",
+            "Нажмите на растение, чтобы увидеть детали и конфликты.",
+            "Смета обновляется автоматически при добавлении растений.",
+            "Экспортируйте проект (демо-режим)."
+        ];
+
+        // Функция обновления интерфейса
+        function updateUI() {
+            // Показать нужную сцену
+            for (let i = 0; i < scenes.length; i++) {
+                if (scenes[i]) {
+                    if (i === currentScene) scenes[i].classList.add('active');
+                    else scenes[i].classList.remove('active');
+                }
+            }
+            sceneNameSpan.innerText = sceneNames[currentScene];
+            captionDiv.innerText = captions[currentScene];
+            stepIndicator.innerText = (currentScene+1) + ' / ' + totalScenes;
+            // Сброс таймера автопереключения (опционально)
+            if (autoTimer) clearTimeout(autoTimer);
+            autoTimer = setTimeout(() => {
+                if (currentScene < totalScenes-1) goToScene(currentScene+1);
+            }, 15000); // 15 секунд
+        }
+
+        function goToScene(index) {
+            if (index < 0) index = 0;
+            if (index >= totalScenes) index = totalScenes-1;
+            if (index === currentScene) return;
+            currentScene = index;
+            updateUI();
+            // Специальные действия при переходе
+            if (currentScene === 4) renderEstimate();
+        }
+
+        function next() { goToScene(currentScene+1); }
+        function prev() { goToScene(currentScene-1); }
+
+        // ---------- СЦЕНА 1: AI СИМУЛЯЦИЯ (НО РАБОТАЕТ КНОПКА) ----------
+        let aiInterval = null;
+        function startAISimulation() {
+            const bar = document.getElementById('aiProgressBar');
+            const text = document.getElementById('aiText');
+            const variantsDiv = document.getElementById('variants');
+            if (!bar) return;
+            if (aiInterval) clearInterval(aiInterval);
+            bar.style.width = '0%';
+            text.innerText = 'Анализ фото...';
+            variantsDiv.style.display = 'none';
+            let width = 0;
+            aiInterval = setInterval(() => {
+                width += Math.random() * 15 + 5;
+                if (width >= 100) {
+                    width = 100;
+                    clearInterval(aiInterval);
+                    text.innerText = 'Готово!';
+                    variantsDiv.style.display = 'flex';
+                }
+                bar.style.width = width + '%';
+            }, 300);
+        }
+
+        // ---------- СЦЕНА 2: РЕДАКТОР (DRAG & DROP) ----------
+        let plotDiv = document.getElementById('plot');
+        function renderPlot() {
+            if (!plotDiv) return;
+            plotDiv.innerHTML = '';
+            plants.forEach((p, idx) => {
+                const el = document.createElement('div');
+                el.className = 'plant-on-plot';
+                el.style.left = p.x + '%';
+                el.style.top = p.y + '%';
+                el.innerHTML = p.icon + `<span style="position: absolute; bottom: -20px; font-size: 10px; white-space: nowrap;">${p.name}</span>`;
+                el.setAttribute('data-index', idx);
+                el.onclick = (e) => {
+                    e.stopPropagation();
+                    if (currentScene === 2) {
+                        // Показать информацию в caption или алерт
+                        captionDiv.innerText = `${p.name} — цена: ${p.price} ₽. Перетащите, чтобы переместить.`;
+                    }
+                };
+                plotDiv.appendChild(el);
+            });
+        }
+
+        function initDragAndDrop() {
+            const catalogItems = document.querySelectorAll('#catalog .plant-item');
+            catalogItems.forEach(item => {
+                item.setAttribute('draggable', 'true');
+                item.ondragstart = (e) => {
+                    e.dataTransfer.setData('text/plain', JSON.stringify({
+                        name: item.getAttribute('data-name'),
+                        icon: item.getAttribute('data-icon'),
+                        price: parseInt(item.getAttribute('data-price'))
+                    }));
+                };
+            });
+            if (plotDiv) {
+                plotDiv.ondragover = (e) => e.preventDefault();
+                plotDiv.ondrop = (e) => {
+                    e.preventDefault();
+                    const rect = plotDiv.getBoundingClientRect();
+                    const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+                    const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    if (data && data.name) {
+                        plants.push({
+                            name: data.name,
+                            icon: data.icon,
+                            price: data.price,
+                            x: Math.min(95, Math.max(5, xPercent)),
+                            y: Math.min(95, Math.max(5, yPercent))
+                        });
+                        renderPlot();
+                        // Если мы на сцене сметы, обновить её позже
+                        if (currentScene === 4) renderEstimate();
+                        // Воспроизвести звук (опционально, но без звука не страшно)
+                    }
+                };
+            }
+        }
+
+        // ---------- СЦЕНА 3: КОНФЛИКТ ----------
+        function checkConflict() {
+            const msgDiv = document.getElementById('conflictMsg');
+            if (msgDiv) {
+                msgDiv.innerHTML = '⚠ Конфликт: Берёза и Папоротник несовместимы!';
+                msgDiv.style.color = '#c06050';
+                // дополнительно можно показать alert
+                alert('Обнаружен конфликт! Берёза и папоротник不宜 сажать рядом.');
+            }
+        }
+
+        // ---------- СЦЕНА 4: СМЕТА ----------
+        function renderEstimate() {
+            const tbody = document.querySelector('#estimateTable tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            let total = 0;
+            // Группируем растения по имени
+            const grouped = {};
+            plants.forEach(p => {
+                if (!grouped[p.name]) grouped[p.name] = { ...p, qty: 0 };
+                grouped[p.name].qty++;
+            });
+            for (let name in grouped) {
+                const item = grouped[name];
+                const sum = item.price * item.qty;
+                total += sum;
+                const row = `<tr><td>${item.icon} ${item.name}</td><td>${item.qty}</td><td>${item.price} ₽</td><td>${sum} ₽</td></tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+            }
+            if (plants.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">Нет добавленных растений. Перейдите в редактор и добавьте растения.</td></tr>';
+            }
+            document.getElementById('totalAmount').innerText = `Итого: ${total.toLocaleString()} ₽`;
+        }
+
+        // ---------- СЦЕНА 5: ЭКСПОРТ (ДЕМО) ----------
+        function exportDemo(type) {
+            alert(`Экспорт в ${type} (демо-режим). В реальном приложении здесь будет генерация файла.`);
+        }
+
+        // ---------- СБРОС ПРОЕКТА ----------
+        function resetProject() {
+            plants = [];
+            renderPlot();
+            renderEstimate();
+            goToScene(0);
+        }
+
+        // ---------- ИНИЦИАЛИЗАЦИЯ ----------
+        function init() {
+            // Кнопки навигации
+            prevBtn.onclick = prev;
+            nextBtn.onclick = next;
+            document.getElementById('startBtn')?.addEventListener('click', () => goToScene(1));
+            document.getElementById('analyzeBtn')?.addEventListener('click', startAISimulation);
+            document.getElementById('checkConflictBtn')?.addEventListener('click', checkConflict);
+            document.getElementById('resetBtn')?.addEventListener('click', resetProject);
+            document.getElementById('exportPdf')?.addEventListener('click', () => exportDemo('PDF'));
+            document.getElementById('exportExcel')?.addEventListener('click', () => exportDemo('Excel'));
+            document.getElementById('exportLink')?.addEventListener('click', () => exportDemo('ссылку'));
+            document.getElementById('exportPng')?.addEventListener('click', () => exportDemo('PNG'));
+
+            initDragAndDrop();
+            renderPlot();
+            renderEstimate();
+            updateUI();
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>
